@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="style.css">
-
+    <link rel="stylesheet" href="character-sheet.css" />
 </head>
 
 <body>
@@ -21,6 +21,16 @@
           <a id="save" title="Save progress">save</a>
           <a id="reload" title="Reload from save point">load</a>
           <a id="theme-switch" title="Switch theme">theme</a>
+          <a id="char-sheet-toggle" title="Герой">character sheet</a>
+        </div>
+
+        <!-- Character Sheet UI -->
+        <div id="char-sheet" style="opacity: 0; transform: translateX(-50%) translateY(-100%);">
+            <h2>Дневник</h2>
+            <div class="property-block">
+                <h3>Умения:</h3>
+                <ul id="skill-list"></ul>
+            </div>
         </div>
 
         <div id="story" class="container">
@@ -34,5 +44,6 @@
     <script src="ink.js"></script>
     <script src="story.js"></script>
     <script src="main.js"></script>
+    <script src="character-sheet.js"></script>
 </body>
 </html>
