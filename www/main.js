@@ -2,6 +2,7 @@
 
     // Create ink story from the content using inkjs
     var story = new inkjs.Story(storyContent);
+    window.story = story;
 
     var savePoint = "";
 
@@ -233,11 +234,19 @@
             }
         });
 
+        window.continueStory = continueStory;
+
 		// Unset storyContainer's height, allowing it to resize itself
 		storyContainer.style.height = "";
 
         if( !firstTime )
             scrollDown(previousBottomEdge);
+
+        // Notify external systems that story continued (e.g. character sheet)
+        if (typeof window.onStoryContinued === "function") {
+            window.onStoryContinued();
+        }
+
 
     }
 

@@ -1,0 +1,72 @@
+#char-sheet {
+    position: fixed;
+    top: 44px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    width: 100%;
+    max-width: 600px;
+    max-height: 50vh;
+    overflow-y: auto;
+    background: #ffffffee;
+    border-bottom: 2px solid #b97c2c;
+    z-index: 999;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  
+  #char-sheet.visible {
+    transform: translateX(-50%) translateY(0%);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  #char-sheet h2 {
+    font-size: 18pt;
+    font-family: "Quattrocento", Georgia, serif;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #222;
+  }
+  
+  #char-sheet h3 {
+    font-size: 13pt;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .property-block {
+    margin-bottom: 1.2rem;
+  }
+  
+  #skill-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    color: #444;
+    font-size: 12.5pt;
+    margin: 0;
+  }
+  
+  #skill-list:empty::before {
+    content: "Няма избрани умения";
+    color: #888;
+    font-style: italic;
+    display: block;
+    padding-left: 1rem;
+  }
+  
+  body.dark #char-sheet {
+    background: #111111ee;
+    border-color: #cc8f1a;
+  }
+  
+  body.dark #char-sheet h2,
+  body.dark #char-sheet h3,
+  body.dark #skill-list,
+  body.dark #skill-list:empty::before {
+    color: #eee;
+  }
+  
