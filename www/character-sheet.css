@@ -69,4 +69,15 @@
     color: #eee;
   }
 
+  .section-list {
+    list-style-type: disc;
+    padding-left: 20px;
+    color: #444;
+    font-size: 12.5pt;
+    margin: 0;
+  }
+  
+  body.dark .section-list {
+    color: #eee;
+  }
   

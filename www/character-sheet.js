@@ -1,44 +1,45 @@
 console.log("[CharacterSheet] Script loaded and executing...");
 
-
 (function () {
-    const skillLabels = {
-        hide_and_seek: "Криеница",
-        tag: "Гоненица",
-        truth_or_dare: "Истината или се осмеляваш"
-    };
-
     function renderCharacterSheet() {
-        const listEl = document.getElementById("skill-list");
-        if (!listEl || !window.story) return;
-
-        const skillsRaw = window.story.variablesState["skills"];
-        if (!skillsRaw) return;
-
-        listEl.innerHTML = "";
-
-        if (skillsRaw instanceof inkjs.InkList || typeof skillsRaw.entries === "function") {
-            for (const [rawKey, score] of skillsRaw) {
-                try {
-                    const parsed = JSON.parse(rawKey);
-                    const skillId = parsed.itemName;
-                    const label = skillLabels[skillId] || skillId;
-
+        const container = document.getElementById("char-sheet");
+        if (!container || !window.getCharacterSheetData) return;
+    
+        const data = window.getCharacterSheetData();
+        const content = data.sections || [];
+    
+        // Remove old blocks before re-rendering
+        const existingBlocks = container.querySelectorAll(".property-block.dynamic");
+        existingBlocks.forEach(block => block.remove());
+    
+        if (content.length === 0) return;
+    
+        for (const section of content) {
+            const block = document.createElement("div");
+            block.classList.add("property-block", "dynamic");
+    
+            const h3 = document.createElement("h3");
+            h3.textContent = section.title;
+            block.appendChild(h3);
+    
+            const ul = document.createElement("ul");
+            ul.classList.add("section-list");
+    
+            if (!section.items || section.items.length === 0) {
+                const placeholder = document.createElement("li");
+                placeholder.textContent = "Няма налична информация";
+                placeholder.classList.add("empty-placeholder");
+                ul.appendChild(placeholder);
+            } else {
+                for (const item of section.items) {
                     const li = document.createElement("li");
-                    li.textContent = label;
-                    listEl.appendChild(li);
-                } catch (e) {
-                    console.warn("[CharacterSheet] Could not parse key:", rawKey);
+                    li.textContent = item;
+                    ul.appendChild(li);
                 }
             }
-        }
-
-        // If no skills present, show placeholder in JS
-        if (!listEl.hasChildNodes()) {
-            const placeholder = document.createElement("li");
-            placeholder.textContent = "Няма избрани умения";
-            placeholder.classList.add("empty-placeholder");
-            listEl.appendChild(placeholder);
+    
+            block.appendChild(ul);
+            container.appendChild(block);
         }
     }
 
@@ -50,9 +51,9 @@ console.log("[CharacterSheet] Script loaded and executing...");
 
         sheetPanel.style.opacity = '';
         sheetPanel.style.transform = '';
-    
+
         if (!toggleBtn || !sheetPanel) return;
-    
+
         toggleBtn.addEventListener("click", () => {
             console.log("[CharacterSheet] Toggle clicked");
 
@@ -64,26 +65,24 @@ console.log("[CharacterSheet] Script loaded and executing...");
                 sheetPanel.classList.add("visible");
             }
         });
-        
 
-        // ✅ Tap anywhere on the sheet to close it (for mobile friendliness)
         sheetPanel.addEventListener("click", () => {
             sheetPanel.classList.remove("visible");
         });
-    
-        // ✅ Update sheet whenever the story continues
+
         window.onStoryContinued = () => {
             if (sheetPanel.classList.contains("visible")) {
                 renderCharacterSheet();
             }
         };
     }
-    
+
     function waitUntilReady() {
         if (
             document.readyState === "complete" &&
             window.story &&
             window.continueStory &&
+            window.getCharacterSheetData &&
             document.getElementById("char-sheet-toggle")
         ) {
             setupCharacterSheet();
@@ -91,7 +90,6 @@ console.log("[CharacterSheet] Script loaded and executing...");
             window.requestAnimationFrame(waitUntilReady);
         }
     }
-    
+
     document.addEventListener("DOMContentLoaded", waitUntilReady);
-    
 })();
