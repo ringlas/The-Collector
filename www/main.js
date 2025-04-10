@@ -70,6 +70,7 @@
                 // Detect tags of the form "X: Y". Currently used for IMAGE and CLASS but could be
                 // customised to be used for other things too.
                 var splitTag = splitPropertyTag(tag);
+				splitTag.property = splitTag.property.toUpperCase();
 
                 // AUDIO: src
                 if( splitTag && splitTag.property == "AUDIO" ) {
@@ -99,6 +100,11 @@
                     var imageElement = document.createElement('img');
                     imageElement.src = splitTag.val;
                     storyContainer.appendChild(imageElement);
+
+                    imageElement.onload = () => {
+                        console.log(`scrollingto ${previousBottomEdge}`)
+                        scrollDown(previousBottomEdge)
+                    }
 
                     showAfter(delay, imageElement);
                     delay += 200.0;
@@ -139,6 +145,11 @@
                     }
                 }
             }
+		
+		// Check if paragraphText is empty
+		if (paragraphText.trim().length == 0) {
+                continue; // Skip empty paragraphs
+		}
 
             // Create paragraph element (initially hidden)
             var paragraphElement = document.createElement('p');
@@ -157,18 +168,37 @@
         // Create HTML choices from ink choices
         story.currentChoices.forEach(function(choice) {
 
-            var is_locked = false;
-
             // Create paragraph with anchor element
+            var choiceTags = choice.tags;
+            var customClasses = [];
+            var isClickable = true;
+            for(var i=0; i<choiceTags.length; i++) {
+                var choiceTag = choiceTags[i];
+                var splitTag = splitPropertyTag(choiceTag);
+				splitTag.property = splitTag.property.toUpperCase();
+
+                if(choiceTag.toUpperCase() == "UNCLICKABLE"){
+                    isClickable = false
+                }
+
+                if( splitTag && splitTag.property == "CLASS" ) {
+                    customClasses.push(splitTag.val);
+                }
+
+            }
+
+            
             var choiceParagraphElement = document.createElement('p');
             choiceParagraphElement.classList.add("choice");
 
-            if(choice.text.includes("<false>")) {
-                choiceParagraphElement.classList.add("locked");
-                is_locked = true;
+            for(var i=0; i<customClasses.length; i++)
+                choiceParagraphElement.classList.add(customClasses[i]);
+
+            if(isClickable){
+                choiceParagraphElement.innerHTML = `<a href='#'>${choice.text}</a>`
+            }else{
+                choiceParagraphElement.innerHTML = `<span class='unclickable'>${choice.text}</span>`
             }
-            
-            choiceParagraphElement.innerHTML = `<a href='#'>${choice.text}</a>`;       
             storyContainer.appendChild(choiceParagraphElement);
 
             // Fade choice in after a short delay
@@ -176,41 +206,39 @@
             delay += 200.0;
 
             // Click on choice
-            var choiceAnchorEl = choiceParagraphElement.querySelectorAll("a")[0];
-            choiceAnchorEl.addEventListener("click", function(event) {
+            if(isClickable){
+                var choiceAnchorEl = choiceParagraphElement.querySelectorAll("a")[0];
+                choiceAnchorEl.addEventListener("click", function(event) {
 
-                // Don't follow <a> link
-                event.preventDefault();
+                    // Don't follow <a> link
+                    event.preventDefault();
 
-                if(is_locked){
-                    return;
-                }
+                    // Extend height to fit
+                    // We do this manually so that removing elements and creating new ones doesn't
+                    // cause the height (and therefore scroll) to jump backwards temporarily.
+                    storyContainer.style.height = contentBottomEdgeY()+"px";
 
-                // Remove all existing choices
-                removeAll(".choice");
+                    // Remove all existing choices
+                    removeAll(".choice");
 
-                // Tell the story where to go next
-                story.ChooseChoiceIndex(choice.index);
+                    // Tell the story where to go next
+                    story.ChooseChoiceIndex(choice.index);
 
-                // This is where the save button will save from
-                savePoint = story.state.toJson();
+                    // This is where the save button will save from
+                    savePoint = story.state.toJson();
 
-                // Aaand loop
-                continueStory();
-            });
+                    // Aaand loop
+                    continueStory();
+                });
+            }
         });
 
-        // Wrapping in a timer function to allow images to load before calculating & scrolling to the bottom of the page 
-        setTimeout(() => { 
-            // Extend height to fit 
-            // We do this manually so that removing elements and creating new ones doesn't 
-            // cause the height (and therefore scroll) to jump backwards temporarily. 
-            storyContainer.style.height = contentBottomEdgeY()+"px"; 
-            
-            if( !firstTime ) 
-            scrollDown(previousBottomEdge); 
+		// Unset storyContainer's height, allowing it to resize itself
+		storyContainer.style.height = "";
 
-        }, 700);
+        if( !firstTime )
+            scrollDown(previousBottomEdge);
+
     }
 
     function restart() {
@@ -230,15 +258,29 @@
     // Various Helper functions
     // -----------------------------------
 
+    // Detects whether the user accepts animations
+    function isAnimationEnabled() {
+        return window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+    }
+
     // Fades in an element after a specified delay
     function showAfter(delay, el) {
-        el.classList.add("hide");
-        setTimeout(function() { el.classList.remove("hide") }, delay);
+        if( isAnimationEnabled() ) {
+            el.classList.add("hide");
+            setTimeout(function() { el.classList.remove("hide") }, delay);
+        } else {
+            // If the user doesn't want animations, show immediately
+            el.classList.remove("hide");
+        }
     }
 
     // Scrolls the page down, but no further than the bottom edge of what you could
     // see previously, so it doesn't go too far.
     function scrollDown(previousBottomEdge) {
+        // If the user doesn't want animations, let them scroll manually
+        if ( !isAnimationEnabled() ) {
+            return;
+        }
 
         // Line up top of screen with the bottom of where the previous content ended
         var target = previousBottomEdge;
@@ -331,7 +373,7 @@
         // load theme from browser memory
         var savedTheme;
         try {
-            savedTheme = window.localStorage.getItem('collector-theme');
+            savedTheme = window.localStorage.getItem('theme');
         } catch (e) {
             console.debug("Couldn't load saved theme");
         }
@@ -361,7 +403,7 @@
             try {
                 window.localStorage.setItem('save-state', savePoint);
                 document.getElementById("reload").removeAttribute("disabled");
-                window.localStorage.setItem('collector-theme', document.body.classList.contains("dark") ? "dark" : "");
+                window.localStorage.setItem('theme', document.body.classList.contains("dark") ? "dark" : "");
             } catch (e) {
                 console.warn("Couldn't save state");
             }
