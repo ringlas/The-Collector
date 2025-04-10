@@ -32,6 +32,14 @@ console.log("[CharacterSheet] Script loaded and executing...");
                 }
             }
         }
+
+        // If no skills present, show placeholder in JS
+        if (!listEl.hasChildNodes()) {
+            const placeholder = document.createElement("li");
+            placeholder.textContent = "Няма избрани умения";
+            placeholder.classList.add("empty-placeholder");
+            listEl.appendChild(placeholder);
+        }
     }
 
     function setupCharacterSheet() {

@@ -50,11 +50,9 @@
     margin: 0;
   }
   
-  #skill-list:empty::before {
-    content: "Няма избрани умения";
-    color: #888;
+  .empty-placeholder {
     font-style: italic;
-    display: block;
+    color: #888;
     padding-left: 1rem;
   }
   
@@ -66,7 +64,9 @@
   body.dark #char-sheet h2,
   body.dark #char-sheet h3,
   body.dark #skill-list,
-  body.dark #skill-list:empty::before {
+  body.dark #skill-list:empty::before,
+  body.dark .empty-placeholder {
     color: #eee;
   }
+
   
